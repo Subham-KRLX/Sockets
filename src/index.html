@@ -23,21 +23,47 @@
     <script>
       const socket = io();
 
-      document.getElementById("registerBtn").onclick = () => {
-        
-      };
+document.getElementById("registerBtn").onclick = () => {
+  const userId = document.getElementById("userId");
+  if (userId) {
+    socket.emit("register", userId);
+    addMessage(`You registered as ${userId}`);
+  }
+};
 
-      document.getElementById("sendPrivate").onclick = () => {
-        
-      };
+document.getElementById("sendPrivate").onclick = () => {
+  const toUser = document.getElementById("toUser").value.trim();
+  const message = document.getElementById("privateMsg").value.trim();
+  if (toUser && message) {
+    socket.emit("privateMessage", { toUser, message });
+    addMessage(`Private to ${toUser}: ${message}`);
+  }
+};
 
-      document.getElementById("joinRoom").onclick = () => {
-        
-      };
+document.getElementById("joinRoom").onclick = () => {
+  const roomName = document.getElementById("roomName").value.trim();
+  if (roomName) {
+    socket.emit("joinRoom", roomName);
+    addMessage(`Joined room ${roomName}`);
+  }
+};
 
-      document.getElementById("sendGroup").onclick = () => {
-        
-      };
+document.getElementById("sendGroup").onclick = () => {
+  const roomName = document.getElementById("roomName").value.trim();
+  const message = document.getElementById("groupMsg").value.trim();
+  if (roomName && message) {
+    socket.emit("groupMessage", { roomName, message });
+    addMessage(`Group ${roomName}: ${message}`);
+  }
+};
+
+socket.on("privateMessage", ({ fromUser, message }) => {
+  addMessage(`Private from ${fromUser}: ${message}`);
+});
+
+socket.on("groupMessage", ({ roomName, fromUser, message }) => {
+  addMessage(`Group ${roomName} from ${fromUser}: ${message}`);
+});
 
 
       function addMessage(msg) {

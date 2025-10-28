@@ -14,27 +14,43 @@ app.get('/', (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+  console.log("connected:", socket.id);
 
-  // When user registers or logs in
-  
+  socket.on("register", (userId) => {
+    users[userId] = socket.id;
+    console.log(`User registered: ${userId} with socket ${socket.id}`);
+  });
 
-  // Private messaging
+  socket.on("privateMessage", ({ toUser, message }) => {
+    const toSocketId = users[toUser];
+    if (toSocketId) {
+      io.to(toSocketId).emit("privateMessage", { fromUser: getUserBySocketId(socket.id), message });
+    }
+  });
 
+  socket.on("joinRoom", (roomName) => {
+    socket.join(roomName);
+    console.log(`Socket ${socket.id} joined room ${roomName}`);
+  });
 
-  // Group joining
-  
-
-  // Group message
-  
+  socket.on("groupMessage", ({ roomName, message }) => {
+    socket.to(roomName).emit("groupMessage", { roomName, fromUser: getUserBySocketId(socket.id), message });
+  });
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
     for (let userId in users) {
-      if (users[userId] === socket.id) delete users[userId];
+      if (users[userId] === socket.id) {
+        delete users[userId];
+        break;
+      }
     }
   });
 });
+
+function getUserBySocketId(socketId) {
+  return Object.keys(users).find(key => users[key] === socketId);
+}
 
 server.listen(3005, () => {
   console.log('Server running at http://localhost:3005');
