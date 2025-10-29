@@ -2,7 +2,6 @@ const express = require('express');
 const { Server } = require("socket.io");
 const { createServer } = require('http');
 const { join } = require('node:path');
-
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
@@ -15,7 +14,6 @@ app.get('/', (req, res) => {
 
 io.on("connection", (socket) => {
   console.log("connected:", socket.id);
-
   socket.on("register", (userId) => {
     users[userId] = socket.id;
     console.log(`User registered: ${userId} with socket ${socket.id}`);
@@ -27,7 +25,6 @@ io.on("connection", (socket) => {
       io.to(toSocketId).emit("privateMessage", { fromUser: getUserBySocketId(socket.id), message });
     }
   });
-
   socket.on("joinRoom", (roomName) => {
     socket.join(roomName);
     console.log(`Socket ${socket.id} joined room ${roomName}`);
@@ -47,11 +44,9 @@ io.on("connection", (socket) => {
     }
   });
 });
-
 function getUserBySocketId(socketId) {
   return Object.keys(users).find(key => users[key] === socketId);
 }
-
 server.listen(3005, () => {
   console.log('Server running at http://localhost:3005');
 });
