@@ -56,7 +56,6 @@ document.getElementById("sendGroup").onclick = () => {
     addMessage(`Group ${roomName}: ${message}`);
   }
 };
-
 socket.on("privateMessage", ({ fromUser, message }) => {
   addMessage(`Private from ${fromUser}: ${message}`);
 });
