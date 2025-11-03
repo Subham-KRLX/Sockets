@@ -4,6 +4,10 @@ const { join } = require('node:path');
 const { Server } = require('socket.io');
 
 const app = express();
+
+// parse JSON bodies for API requests
+app.use(express.json());
+
 const server = createServer(app);
 const io = new Server(server);
 
@@ -16,6 +20,10 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('chat message', msg);
   });
 });
+
+// mount users router
+const usersRouter = require('./users/routes');
+app.use('/users', usersRouter);
 
 server.listen(3000, () => {
   console.log('server running at http://localhost:3000');
