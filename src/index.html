@@ -14,33 +14,107 @@
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages > li { padding: 0.5rem 1rem; }
       #messages > li:nth-child(odd) { background: #efefef; }
+      .container { padding: 1rem; }
+      .controls input { margin-right: .5rem; }
     </style>
   </head>
   <body>
-    <ul id="messages"></ul>
+    <div class="container">
+      <h2>Multi User Chat</h2>
+      <div class="controls">
+        <input id="userId" placeholder="Enter your user ID" />
+        <button id="registerBtn">Register</button>
+      </div>
+
+      <h4>Private Message</h4>
+      <div class="controls">
+        <input id="toUser" placeholder="To user ID" />
+        <input id="privateMsg" placeholder="Message" />
+        <button id="sendPrivate">Send</button>
+      </div>
+
+      <h4>Group Chat</h4>
+      <div class="controls">
+        <input id="roomName" placeholder="Room name" />
+        <button id="joinRoom">Join Room</button>
+        <input id="groupMsg" placeholder="Group message" />
+        <button id="sendGroup">Send</button>
+      </div>
+
+      <ul id="messages"></ul>
+    </div>
+
     <form id="form" action="submit">
       <input id="input" /><button type="Submit">Send</button>
     </form>
+
     <script src="/socket.io/socket.io.js"></script>
-<script>
-  const socket = io();
+    <script>
+      const socket = io();
 
-  const form = document.getElementById('form');
-  const input = document.getElementById('input');
+      function addMessage(msg) {
+        const li = document.createElement('li');
+        li.textContent = msg;
+        document.getElementById('messages').appendChild(li);
+        window.scrollTo(0, document.body.scrollHeight);
+      }
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (input.value) {
-      socket.emit('chat message', input.value);
-      input.value = '';
-    }
-  });
-    socket.on('chat message', (msg) => {
-    const item = document.createElement('li');
-    item.textContent = msg;
-    messages.appendChild(item);
-    window.scrollTo(0, document.body.scrollHeight);
-  });
-</script>
+      // basic public chat form
+      const form = document.getElementById('form');
+      const input = document.getElementById('input');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit('chat message', input.value);
+          addMessage('You: ' + input.value);
+          input.value = '';
+        }
+      });
+
+      socket.on('chat message', (msg) => addMessage(msg));
+
+      // multi-user controls
+      document.getElementById('registerBtn').onclick = () => {
+        const userId = document.getElementById('userId').value;
+        if (userId) {
+          socket.emit('register', userId);
+          addMessage(`You registered as ${userId}`);
+        }
+      };
+
+      document.getElementById('sendPrivate').onclick = () => {
+        const toUser = document.getElementById('toUser').value;
+        const message = document.getElementById('privateMsg').value;
+        if (toUser && message) {
+          socket.emit('privateMessage', { toUser, message });
+          addMessage(`Private to ${toUser}: ${message}`);
+        }
+      };
+
+      document.getElementById('joinRoom').onclick = () => {
+        const roomName = document.getElementById('roomName').value;
+        if (roomName) {
+          socket.emit('joinRoom', roomName);
+          addMessage(`Joined room ${roomName}`);
+        }
+      };
+
+      document.getElementById('sendGroup').onclick = () => {
+        const roomName = document.getElementById('roomName').value;
+        const message = document.getElementById('groupMsg').value;
+        if (roomName && message) {
+          socket.emit('groupMessage', { roomName, message });
+          addMessage(`Group ${roomName}: ${message}`);
+        }
+      };
+
+      socket.on('privateMessage', ({ fromUser, message }) => {
+        addMessage(`Private from ${fromUser}: ${message}`);
+      });
+
+      socket.on('groupMessage', ({ roomName, fromUser, message }) => {
+        addMessage(`Group ${roomName} from ${fromUser}: ${message}`);
+      });
+    </script>
   </body>
 </html>
